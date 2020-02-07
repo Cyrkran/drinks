@@ -64,8 +64,8 @@ DrinkApi = (app, drinkCollection) => {
             howTo: req.body.howTo,
             recipient: req.body.recipient
           })
-          .then(({result, ops, insertedId}) => {
-            res.send({result, ops, insertedId});
+          .then(({ result, ops, insertedId }) => {
+            res.send({ result, ops, insertedId });
           })
           .catch(res.send(err));
       })
@@ -76,18 +76,38 @@ DrinkApi = (app, drinkCollection) => {
 
   module.exports = app.delete("/drink/remove/:name", (req, res) => {
     const name = req.params.name;
-    drinkCollection.findOneAndDelete({name}).then(success => {
+    drinkCollection.findOneAndDelete({ name }).then(success => {
       res.send(success);
-    })
+    });
   });
 
   module.exports = app.post("/drink/update/:name", (req, res) => {
     const name = req.params.name;
     const item = req.body;
-    
-    drinkCollection.findOneAndUpdate({name}, {$set: item}).then(success => {
-      res.send(success)
-    })
+
+    drinkCollection.findOneAndUpdate({ name }, { $set: item }).then(success => {
+      res.send(success);
+    });
+  });
+
+  module.exports = app.get("/ingredients", (req, res) => {
+    const allDrinks = drinkCollection
+      .find({}, { name: 0, recipient: 0, ingredients: 1, _id: 0, howTo: 0 })
+      .toArray();
+
+    allDrinks.then(collection => {
+      var ing = [];
+      collection.forEach(item => {
+        item.ingredients.forEach(ingredient => {
+          ing.includes(ingredient.item) ? () => {} : ing.push(ingredient.item);
+        });
+      });
+
+      ing.sort((a, b) => {
+        return a.localeCompare(b);
+      });
+      res.send(ing)
+    });
   });
 };
 
